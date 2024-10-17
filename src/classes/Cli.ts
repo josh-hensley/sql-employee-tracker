@@ -15,11 +15,12 @@ const pool = new Pool(
 )
 
 class Cli {
-    mainMenuPrompt: any[] = [{
+    mainMenuPrompt: any[] = [
+        {
         type: 'list',
         name: 'viewAddOrUpdate',
         message: 'Select an option',
-        list: [
+        choices: [
             'View all departments', 
             'View all roles', 
             'View all employees', 
@@ -32,27 +33,46 @@ class Cli {
     }];
 
     private viewAllDepartments(){
-        pool.query('', (err: Error, result: QueryResult)=>{
+        pool.query('SELECT * FROM departments', (err: Error, result: QueryResult)=>{
             if (err){
                 console.log(err.message);
+                this.startCli();
             }
             else {
-                console.log(result);
+                let text = `ID\t|  NAME\t\t|\n`;
+                let lineBreakSize = 24;
+                for (let i = 0; i <= lineBreakSize; i++){
+                    text += `-`;
+                };
+                text += `\n`;
+                result.rows.forEach(dep=>{
+                    text +=`${dep.id}\t|  ${dep.name}\t|\n`;
+                });
+                console.log(text);
+                this.startCli();
             }
         });
-        this.startCli();
     }
 
     private viewAllRoles() {
-        pool.query('', (err: Error, result: QueryResult)=>{
+        pool.query('SELECT * FROM roles', (err: Error, result: QueryResult)=>{
             if (err){
                 console.log(err.message);
             }
             else {
-                console.log(result);
+                let text = `ID\t|  TITLE\t|  SALARY\t|  DEPARTMENT\t|\n`;
+                let lineBreakSize = 56;
+                for (let i = 0; i <= lineBreakSize; i++){
+                    text += `-`;
+                };
+                text += `\n`;
+                result.rows.forEach(role=>{
+                    text +=`${role.id}\t|\t${role.title}\t|\t${role.salary}\t|\t${role.department}\n`;
+                });
+                console.log(text);
+                this.startCli();
             }
         });
-        this.startCli();
     }
 
     private viewAllEmployees() {
@@ -64,19 +84,25 @@ class Cli {
                 console.log(result);
             }
         });
-        this.startCli();
     }
 
     private addDepartment() {
-        pool.query('', (err: Error, result: QueryResult)=>{
-            if (err){
-                console.log(err.message);
-            }
-            else {
-                console.log(result);
-            }
-        });
-        this.startCli();
+        const question: any[] = [{
+            type: "input",
+            name: "departmentName",
+            message: "Input department name:"
+        }];
+        inquirer.prompt(question).then(answer=>{
+            pool.query('INSERT INTO departments (name) VALUES ($1)', [answer.departmentName], (err: Error, result: QueryResult)=>{
+                if (err){
+                    console.log(err.message);
+                }
+                else {
+                    console.log(`added ${result.rowCount} rows.`);
+                }
+            });
+        })
+        
     }
 
     private addRole() {
@@ -88,7 +114,6 @@ class Cli {
                 console.log(result);
             }
         });
-        this.startCli();
     }
 
     private addEmployee() {
@@ -100,7 +125,6 @@ class Cli {
                 console.log(result);
             }
         });
-        this.startCli();
     }
 
     private updateEmployee() {
@@ -112,7 +136,6 @@ class Cli {
                 console.log(result);
             }
         });
-        this.startCli();
     }
 
     startCli(): void {
@@ -142,6 +165,8 @@ class Cli {
             else {
                 return;
             }
-        })
+        });
     }
 }
+
+export default Cli;
