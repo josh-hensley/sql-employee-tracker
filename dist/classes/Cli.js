@@ -67,16 +67,28 @@ class Cli {
                     text += `${role.id}\t|\t${role.title}\t|\t${role.salary}\t|\t${role.department}\n`;
                 });
                 console.log(text);
+                this.startCli();
             }
         });
     }
     viewAllEmployees() {
-        pool.query('', (err, result) => {
+        pool.query('SELECT * FROM employees', (err, result) => {
             if (err) {
                 console.log(err.message);
             }
             else {
-                console.log(result);
+                let text = `ID\t|  NAME\t\t|  ROLE ID\t|  MANAGER ID\t|\n`;
+                let lineBreakSize = 56;
+                for (let i = 0; i <= lineBreakSize; i++) {
+                    text += `-`;
+                }
+                ;
+                text += `\n`;
+                result.rows.forEach(employee => {
+                    text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t|  ${employee.role_id}\t|  ${employee.manager_id}\t|\n`;
+                });
+                console.log(text);
+                this.startCli();
             }
         });
     }
