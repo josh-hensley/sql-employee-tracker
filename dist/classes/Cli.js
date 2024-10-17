@@ -54,6 +54,7 @@ class Cli {
         pool.query('SELECT * FROM roles', (err, result) => {
             if (err) {
                 console.log(err.message);
+                this.startCli();
             }
             else {
                 let text = `ID\t|  TITLE\t|  SALARY\t|  DEPARTMENT\t|\n`;
@@ -75,6 +76,7 @@ class Cli {
         pool.query('SELECT * FROM employees', (err, result) => {
             if (err) {
                 console.log(err.message);
+                this.startCli();
             }
             else {
                 let text = `ID\t|  NAME\t\t|  ROLE ID\t|  MANAGER ID\t|\n`;
@@ -104,19 +106,45 @@ class Cli {
                     console.log(err.message);
                 }
                 else {
-                    console.log(`added ${result.rowCount} rows.`);
+                    console.log(`${result.rowCount} row(s) added.`);
+                    this.startCli();
                 }
             });
         });
     }
     addRole() {
-        pool.query('', (err, result) => {
-            if (err) {
-                console.log(err.message);
+        const departments = this.getDepartments();
+        const questions = [
+            {
+                type: "input",
+                name: "title",
+                message: "Input title:"
+            },
+            {
+                type: "input",
+                name: "salary",
+                message: "Input salary:"
+            },
+            {
+                type: "list",
+                name: "department",
+                message: "Select Department",
+                choices: departments
             }
-            else {
-                console.log(result);
-            }
+        ];
+        inquirer.prompt(questions).then(answer => {
+            pool.query(`INSERT INTO roles (title, salary, department) 
+                    VALUES 
+                        ($1, $2, $3)`, [answer.title, answer.salary, answer.department], (err, result) => {
+                if (err) {
+                    console.log(err.message);
+                    this.startCli();
+                }
+                else {
+                    console.log(`${result.rowCount} row(s) added.`);
+                    this.startCli();
+                }
+            });
         });
     }
     addEmployee() {
@@ -138,6 +166,18 @@ class Cli {
                 console.log(result);
             }
         });
+    }
+    getDepartments() {
+        let departments = [];
+        pool.query('SELECT * FROM departments', (_err, result) => {
+            result.rows.forEach(dep => {
+                departments.push({
+                    name: dep.name,
+                    value: dep.id
+                });
+            });
+        });
+        return departments;
     }
     startCli() {
         inquirer.prompt(this.mainMenuPrompt)

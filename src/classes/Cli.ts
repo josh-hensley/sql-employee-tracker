@@ -58,6 +58,7 @@ class Cli {
         pool.query('SELECT * FROM roles', (err: Error, result: QueryResult)=>{
             if (err){
                 console.log(err.message);
+                this.startCli()
             }
             else {
                 let text = `ID\t|  TITLE\t|  SALARY\t|  DEPARTMENT\t|\n`;
@@ -67,7 +68,7 @@ class Cli {
                 };
                 text += `\n`;
                 result.rows.forEach(role=>{
-                    text +=`${role.id}\t|\t${role.title}\t|\t${role.salary}\t|\t${role.department}\n`;
+                    text +=`${role.id}\t|  ${role.title}\t|  ${role.salary}\t|  ${role.department}\n`;
                 });
                 console.log(text);
                 this.startCli();
@@ -79,6 +80,7 @@ class Cli {
         pool.query('SELECT * FROM employees', (err: Error, result: QueryResult)=>{
             if (err){
                 console.log(err.message);
+                this.startCli();
             }
             else {
                 let text = `ID\t|  NAME\t\t|  ROLE ID\t|  MANAGER ID\t|\n`;
@@ -108,7 +110,8 @@ class Cli {
                     console.log(err.message);
                 }
                 else {
-                    console.log(`added ${result.rowCount} rows.`);
+                    console.log(`${result.rowCount} row(s) added.`);
+                    this.startCli();
                 }
             });
         })
@@ -116,14 +119,43 @@ class Cli {
     }
 
     private addRole() {
-        pool.query('', (err: Error, result: QueryResult)=>{
-            if (err){
-                console.log(err.message);
+        const departments = this.getDepartments();
+        const questions: any[] = [
+            {
+                type: "input",
+                name: "title",
+                message: "Input title:"
+            },
+            {
+                type: "input",
+                name: "salary",
+                message: "Input salary:"
+            },
+            {
+                type: "list",
+                name: "department",
+                message: "Select Department",
+                choices: departments
             }
-            else {
-                console.log(result);
-            }
+        ];
+        inquirer.prompt(questions).then(answer=>{
+            pool.query(
+                `INSERT INTO roles (title, salary, department) 
+                    VALUES 
+                        ($1, $2, $3)`, 
+                [answer.title, answer.salary, answer.department],
+                (err: Error, result: QueryResult)=>{
+                if (err){
+                    console.log(err.message);
+                    this.startCli();
+                }
+                else {
+                    console.log(`${result.rowCount} row(s) added.`);
+                    this.startCli();
+                }
+            });
         });
+        
     }
 
     private addEmployee() {
@@ -146,6 +178,20 @@ class Cli {
                 console.log(result);
             }
         });
+    } 
+
+    private getDepartments(): any[] {
+        let departments: any[] = [];
+        pool.query('SELECT * FROM departments', (_err: Error, result: QueryResult)=>{
+            result.rows.forEach(dep=>{
+                departments.push(
+                    { 
+                    name: dep.name,
+                    value: dep.id
+                });
+            });
+        });
+        return departments;
     }
 
     startCli(): void {
