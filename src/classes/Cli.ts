@@ -52,7 +52,7 @@ class Cli {
                 text += `\n`;
                 result.rows.forEach(role => {
                     if (role.title.length >= 9) {
-                        text += `${role.id}\t|  ${role.title}\t|  ${role.salary}\t|  ${role.department}\t|\n`;
+                        text += `${role.id}\t|  ${role.title}\t|  ${role.salary}\t|  ${role.department}\t\t|\n`;
                     }
                     else {
                         text += `${role.id}\t|  ${role.title}\t\t|  ${role.salary}\t|  ${role.department}\t|\n`;
@@ -73,7 +73,7 @@ class Cli {
             }
             else {
                 let text = `ID\t|  NAME\t\t\t|  ROLE ID\t|  MANAGER ID\t|\n`;
-                let lineBreakSize = 56;
+                let lineBreakSize = 64;
                 for (let i = 0; i <= lineBreakSize; i++) {
                     text += `-`;
                 };
@@ -189,8 +189,8 @@ class Cli {
         });
     }
 
-    private updateEmployee() {
-        const employees = this.getEmployees();
+    private async updateEmployee() {
+        const employees = await this.getEmployees();
         const roles = this.getRoles();
         const questions: any[] = [
             {
@@ -218,48 +218,61 @@ class Cli {
                 }
             });
         })
-
-
     }
 
-    private getDepartments(): any[] {
-        let departments: any[] = [];
-        pool.query('SELECT * FROM departments', (_err: Error, result: QueryResult) => {
-            result.rows.forEach(dep => {
-                departments.push(
-                    {
-                        name: dep.name,
-                        value: dep.id
+    private getDepartments(): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            let departments: any[] = [];
+            pool.query('SELECT * FROM departments', (err: Error, result: QueryResult) => {
+                if(err){
+                    return reject(err);
+                }
+                result.rows.forEach(dep => {
+                    departments.push(
+                        {
+                            name: dep.name,
+                            value: dep.id
+                        });
+                });
+            });
+            resolve(departments);
+        });
+    }
+
+    private getRoles(): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            let roles: any[] = [];
+            pool.query('SELECT id, title FROM roles', (err: Error, result: QueryResult) => {
+                if (err) {
+                    return reject(err);
+                }
+                result.rows.forEach(role => {
+                    roles.push({
+                        name: role.title,
+                        value: role.id
                     });
+                });
+                resolve(roles);
             });
         });
-        return departments;
     }
 
-    private getRoles(): any[] {
-        let roles: any[] = [];
-        pool.query('SELECT id, title FROM roles', (_err: Error, result: QueryResult) => {
-            result.rows.forEach(role => {
-                roles.push({
-                    name: role.title,
-                    value: role.id
+    private getEmployees(): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            let employees: any[] = [];
+            pool.query('SELECT id, first_name, last_name FROM employees', (err: Error, result: QueryResult) => {
+                if (err) {
+                    return reject(err);
+                }
+                result.rows.forEach(employee => {
+                    employees.push({
+                        name: `${employee.first_name} ${employee.last_name}`,
+                        value: employee.id
+                    });
                 });
+                resolve(employees);
             });
         });
-        return roles;
-    }
-
-    getEmployees(): any[] {
-        let employees: any[] = [];
-        pool.query('SELECT id, first_name, last_name FROM employees', (_err: Error, result: QueryResult) => {
-            result.rows.forEach(employee => {
-                employees.push({
-                    name: `${employee.first_name} ${employee.last_name}`,
-                    value: employee.id
-                });
-            });
-        });
-        return employees;
     }
 
     startCli(): void {

@@ -47,7 +47,7 @@ class Cli {
                 text += `\n`;
                 result.rows.forEach(role => {
                     if (role.title.length >= 9) {
-                        text += `${role.id}\t|  ${role.title}\t|  ${role.salary}\t|  ${role.department}\t|\n`;
+                        text += `${role.id}\t|  ${role.title}\t|  ${role.salary}\t|  ${role.department}\t\t|\n`;
                     }
                     else {
                         text += `${role.id}\t|  ${role.title}\t\t|  ${role.salary}\t|  ${role.department}\t|\n`;
@@ -66,7 +66,7 @@ class Cli {
             }
             else {
                 let text = `ID\t|  NAME\t\t\t|  ROLE ID\t|  MANAGER ID\t|\n`;
-                let lineBreakSize = 56;
+                let lineBreakSize = 64;
                 for (let i = 0; i <= lineBreakSize; i++) {
                     text += `-`;
                 }
@@ -172,8 +172,9 @@ class Cli {
             });
         });
     }
-    updateEmployee() {
-        const employees = this.getEmployees();
+    async updateEmployee() {
+        const employees = await this.getEmployees();
+        console.log(employees);
         const roles = this.getRoles();
         const questions = [
             {
@@ -227,16 +228,21 @@ class Cli {
         return roles;
     }
     getEmployees() {
-        let employees = [];
-        pool.query('SELECT id, first_name, last_name FROM employees', (_err, result) => {
-            result.rows.forEach(employee => {
-                employees.push({
-                    name: `${employee.first_name} ${employee.last_name}`,
-                    value: employee.id
+        return new Promise((resolve, reject) => {
+            let employees = [];
+            pool.query('SELECT id, first_name, last_name FROM employees', (err, result) => {
+                if (err) {
+                    return reject(err);
+                }
+                result.rows.forEach(employee => {
+                    employees.push({
+                        name: `${employee.first_name} ${employee.last_name}`,
+                        value: employee.id
+                    });
                 });
+                resolve(employees);
             });
         });
-        return employees;
     }
     startCli() {
         const questions = [
