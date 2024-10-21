@@ -1,16 +1,9 @@
 import inquirer from "inquirer";
-import pg from "pg";
-import dotenv from "dotenv";
-dotenv.config();
-const { Pool } = pg;
-const pool = new Pool({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
+import pool from '../connections.js';
+import art from 'ascii-art';
 class Cli {
-    viewAllDepartments() {
-        pool.query('SELECT * FROM departments', (err, result) => {
+    async viewAllDepartments() {
+        pool.query('SELECT * FROM departments', async (err, result) => {
             if (err) {
                 console.log(err.message);
                 this.startCli();
@@ -27,6 +20,12 @@ class Cli {
                     text += `${dep.id}\t|  ${dep.name}\t|\n`;
                 });
                 console.log(text);
+                let data = [];
+                result.rows.forEach(dep => {
+                    data.push();
+                });
+                const table = await this.createTable([[1, 1, 1, 1], [2, 2, 2, 2]]);
+                console.log(table);
                 this.startCli();
             }
         });
@@ -103,8 +102,8 @@ class Cli {
             });
         });
     }
-    addRole() {
-        const departments = this.getDepartments();
+    async addRole() {
+        const departments = await this.getDepartments();
         const questions = [
             {
                 type: "input",
@@ -138,8 +137,8 @@ class Cli {
             });
         });
     }
-    addEmployee() {
-        const roles = this.getRoles();
+    async addEmployee() {
+        const roles = await this.getRoles();
         const questions = [
             {
                 type: "input",
@@ -174,8 +173,7 @@ class Cli {
     }
     async updateEmployee() {
         const employees = await this.getEmployees();
-        console.log(employees);
-        const roles = this.getRoles();
+        const roles = await this.getRoles();
         const questions = [
             {
                 type: "list",
@@ -204,28 +202,38 @@ class Cli {
         });
     }
     getDepartments() {
-        let departments = [];
-        pool.query('SELECT * FROM departments', (_err, result) => {
-            result.rows.forEach(dep => {
-                departments.push({
-                    name: dep.name,
-                    value: dep.id
+        return new Promise((resolve, reject) => {
+            let departments = [];
+            pool.query('SELECT * FROM departments', (err, result) => {
+                if (err) {
+                    return reject(err);
+                }
+                result.rows.forEach(dep => {
+                    departments.push({
+                        name: dep.name,
+                        value: dep.id
+                    });
                 });
             });
+            resolve(departments);
         });
-        return departments;
     }
     getRoles() {
-        let roles = [];
-        pool.query('SELECT id, title FROM roles', (_err, result) => {
-            result.rows.forEach(role => {
-                roles.push({
-                    name: role.title,
-                    value: role.id
+        return new Promise((resolve, reject) => {
+            let roles = [];
+            pool.query('SELECT id, title FROM roles', (err, result) => {
+                if (err) {
+                    return reject(err);
+                }
+                result.rows.forEach(role => {
+                    roles.push({
+                        name: role.title,
+                        value: role.id
+                    });
                 });
+                resolve(roles);
             });
         });
-        return roles;
     }
     getEmployees() {
         return new Promise((resolve, reject) => {
@@ -243,6 +251,13 @@ class Cli {
                 resolve(employees);
             });
         });
+    }
+    async createTable(rows) {
+        const text = await art.table({
+            width: 100,
+            data: rows
+        });
+        return text;
     }
     startCli() {
         const questions = [

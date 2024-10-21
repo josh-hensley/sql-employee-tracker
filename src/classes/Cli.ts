@@ -1,22 +1,11 @@
 import inquirer from "inquirer";
-import pg, { QueryResult } from "pg";
-import dotenv from "dotenv";
+import { QueryResult } from "pg";
+import pool from '../connections.js'
 
-dotenv.config();
-
-const { Pool } = pg;
-
-const pool = new Pool(
-    {
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-    }
-)
 
 class Cli {
-    private viewAllDepartments() {
-        pool.query('SELECT * FROM departments', (err: Error, result: QueryResult) => {
+    private async viewAllDepartments() {
+        pool.query('SELECT * FROM departments', async (err: Error, result: QueryResult) => {
             if (err) {
                 console.log(err.message);
                 this.startCli();
@@ -112,8 +101,8 @@ class Cli {
 
     }
 
-    private addRole() {
-        const departments = this.getDepartments();
+    private async addRole() {
+        const departments = await this.getDepartments();
         const questions: any[] = [
             {
                 type: "input",
@@ -152,8 +141,8 @@ class Cli {
 
     }
 
-    private addEmployee() {
-        const roles = this.getRoles();
+    private async addEmployee() {
+        const roles = await this.getRoles();
         const questions: any[] = [
             {
                 type: "input",
@@ -191,7 +180,7 @@ class Cli {
 
     private async updateEmployee() {
         const employees = await this.getEmployees();
-        const roles = this.getRoles();
+        const roles = await this.getRoles();
         const questions: any[] = [
             {
                 type: "list",
