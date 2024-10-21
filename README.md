@@ -22,6 +22,8 @@ This app requires node.js and postgresql.  Run `npm i` to install dependencies a
 
 ## <a name="Usage"></a>Usage
 
+https://github.com/user-attachments/assets/04985d6b-ee6c-4d73-b422-06f057e5992f
+
 run `npm start` to begin.  Use arrow keys to select options and then input data or select from a menu to create, update and read data.
 
 ## <a name="license"></a>License
