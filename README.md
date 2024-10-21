@@ -13,13 +13,12 @@ A CLI app that modifies an SQL database of employees and roles.
 * [Usage](#Usage)
 * [License](#License)
 * [Contributing](#Contributing)
-* [Tests](#Tests)
 * [Questions](#Questions)
  
 
 ## <a name="Installation"></a>Installation
 
-This app requires node.js.  Run `npm i` to install dependencies.  Rename the .env.EXAMPLE file to .env and fill in the variables.   You will need to cd into the db folder and run `psql -U postgres` and enter your password, then run `\i schema.sql` from postgres
+This app requires node.js and postgresql.  Run `npm i` to install dependencies and then `npm run build` to build the dist folder.  Rename the .env.EXAMPLE file to .env and fill in the variables.   You will need to cd into the db folder and run `psql -U postgres` and enter your password, then run `\i schema.sql` from postgres to create the database.
 
 ## <a name="Usage"></a>Usage
 
@@ -31,11 +30,7 @@ run `npm start` to begin.  Use arrow keys to select options and then input data 
 
 ## <a name="contributing"></a>Contributing
 
-If you wish to contribute, please follow these [guidelines](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
-
-## <a name="tests"></a>Tests
-
-Tests go in here.
+If you wish to contribute, please follow these [guidelines](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)..
 
 ## <a name="questions"></a>Questions
 
