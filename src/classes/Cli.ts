@@ -55,24 +55,25 @@ class Cli {
     }
 
     private viewAllEmployees() {
-        pool.query('SELECT * FROM employees', (err: Error, result: QueryResult) => {
+        pool.query(`SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title as role, roles.salary FROM employees 
+            JOIN roles ON employees.role_id=roles.id`, (err: Error, result: QueryResult) => {
             if (err) {
                 console.log(err.message);
                 this.startCli();
             }
             else {
-                let text = `ID\t|  NAME\t\t\t|  ROLE ID\t|  MANAGER ID\t|\n`;
-                let lineBreakSize = 64;
+                let text = `ID\t|  NAME\t\t\t|  MANAGER ID\t|  ROLE\t\t\t|  SALARY\t|\n`;
+                let lineBreakSize = 88;
                 for (let i = 0; i <= lineBreakSize; i++) {
                     text += `-`;
                 };
                 text += `\n`;
                 result.rows.forEach(employee => {
                     if (employee.first_name.length + employee.last_name.length + 1 <= 12) {
-                        text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t\t|  ${employee.role_id}\t\t|  ${employee.manager_id}\t\t|\n`;
+                        text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t\t|  ${employee.manager_id}\t\t|  ${employee.role}\t|  ${employee.salary}\t|\n`;
                     }
                     else {
-                        text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t|  ${employee.role_id}\t\t|  ${employee.manager_id}\t\t|\n`;
+                        text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t|  ${employee.manager_id}\t\t|  ${employee.role}\t|  ${employee.salary}\t|\n`;
                     }
                 });
                 console.log(text);
