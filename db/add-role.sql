@@ -1,0 +1,1 @@
+INSERT INTO roles (title, salary, department) VALUES ($1, $2, $3);

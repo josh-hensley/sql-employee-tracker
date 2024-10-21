@@ -1,24 +1,35 @@
 import inquirer from "inquirer";
 import { QueryResult } from "pg";
-import pool from '../connections.js'
+import pool from '../connections.js';
+import fs from 'fs';
 
 
 class Cli {
     private async viewAllDepartments() {
-        pool.query('SELECT * FROM departments', async (err: Error, result: QueryResult) => {
+        pool.query('SELECT * FROM departments;', (err: Error, result: QueryResult) => {
             if (err) {
                 console.log(err.message);
                 this.startCli();
             }
             else {
-                let text = `ID\t|  NAME\t\t|\n`;
-                let lineBreakSize = 24;
+                let text = `ID\t|  NAME\t\t\t|\n`;
+                let lineBreakSize = 32;
                 for (let i = 0; i <= lineBreakSize; i++) {
                     text += `-`;
                 };
                 text += `\n`;
                 result.rows.forEach(dep => {
-                    text += `${dep.id}\t|  ${dep.name}\t|\n`;
+                    text += `${dep.id}\t|`
+                    if (dep.name.length < 5){
+                        text += `  ${dep.name}\t\t\t|\n`;
+                    }
+                    else if (dep.name.length < 11) {
+                        text += `  ${dep.name}\t\t|\n`;
+                    }
+                    else {
+                        text += `  ${dep.name}\t|\n`;
+                    }
+                    
                 });
                 console.log(text);
                 this.startCli();
@@ -27,26 +38,34 @@ class Cli {
     }
 
     private viewAllRoles() {
-        pool.query('SELECT * FROM roles', (err: Error, result: QueryResult) => {
+        const query = fs.readFileSync('db/view-roles.sql', 'utf-8');
+        pool.query(query, (err: Error, result: QueryResult) => {
             if (err) {
                 console.log(err.message);
                 this.startCli()
             }
             else {
-                let text = `ID\t|  TITLE\t\t|  SALARY\t|  DEPARTMENT\t|\n`;
-                let lineBreakSize = 64;
+                let text = `ID\t|  TITLE\t\t|  SALARY\t|  DEPARTMENT\t\t|\n`;
+                let lineBreakSize = 72;
                 for (let i = 0; i <= lineBreakSize; i++) {
                     text += `-`;
                 };
                 text += `\n`;
                 result.rows.forEach(role => {
-                    if (role.title.length >= 9) {
-                        text += `${role.id}\t|  ${role.title}\t|  ${role.salary}\t|  ${role.department}\t\t|\n`;
+                    text += `${role.id}\t|`;
+                    if (role.title.length > 12) {
+                        text += `  ${role.title}\t|`;
                     }
                     else {
-                        text += `${role.id}\t|  ${role.title}\t\t|  ${role.salary}\t|  ${role.department}\t|\n`;
+                        text += `  ${role.title}\t\t|`;
                     }
-
+                    text += `  ${role.salary}\t|`;
+                    if (role.department.length > 12){
+                        text += `  ${role.department}\t|\n`;
+                    }
+                    else {
+                        text += `  ${role.department}\t\t|\n`;
+                    }
                 });
                 console.log(text);
                 this.startCli();
@@ -55,26 +74,45 @@ class Cli {
     }
 
     private viewAllEmployees() {
-        pool.query(`SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title as role, roles.salary FROM employees 
-            JOIN roles ON employees.role_id=roles.id`, (err: Error, result: QueryResult) => {
+        const query = fs.readFileSync('./db/view-employees.sql', 'utf-8');
+        pool.query(query, (err: Error, result: QueryResult) => {
             if (err) {
                 console.log(err.message);
                 this.startCli();
             }
             else {
-                let text = `ID\t|  NAME\t\t\t|  MANAGER ID\t|  ROLE\t\t\t|  SALARY\t|\n`;
-                let lineBreakSize = 88;
+                let text = `ID\t|  NAME\t\t\t|  MANAGER ID\t|  ROLE\t\t\t|  SALARY\t|  DEPARTMENT\t\t|\n`;
+                let lineBreakSize = 112;
                 for (let i = 0; i <= lineBreakSize; i++) {
                     text += `-`;
                 };
                 text += `\n`;
                 result.rows.forEach(employee => {
-                    if (employee.first_name.length + employee.last_name.length + 1 <= 12) {
-                        text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t\t|  ${employee.manager_id}\t\t|  ${employee.role}\t|  ${employee.salary}\t|\n`;
+                    text += `${employee.id}\t|`;
+                    if (employee.first_name.length + employee.last_name.length + 1 < 12) {
+                        text += `  ${employee.first_name} ${employee.last_name}\t\t|`;
                     }
                     else {
-                        text += `${employee.id}\t|  ${employee.first_name} ${employee.last_name}\t|  ${employee.manager_id}\t\t|  ${employee.role}\t|  ${employee.salary}\t|\n`;
+                        text += `  ${employee.first_name} ${employee.last_name}\t|`;
                     }
+                    text += `  ${employee.manager_id}\t\t|`;
+                    if (employee.role.length < 5){
+                        text +=`  ${employee.role}\t\t\t|`;
+                    }
+                    else if (employee.role.length < 11){
+                        text +=`  ${employee.role}\t\t|`;
+                    }
+                    else {
+                        text +=`  ${employee.role}\t|`;
+                    }
+                    text += `  ${employee.salary}\t|`;
+                    if (employee.department.length > 12){
+                        text +=`  ${employee.department}\t|\n`;
+                    }
+                    else {
+                        text +=`  ${employee.department}\t\t|\n`;
+                    }
+
                 });
                 console.log(text);
                 this.startCli();
@@ -89,12 +127,13 @@ class Cli {
             message: "Input department name:"
         }];
         inquirer.prompt(question).then(answer => {
-            pool.query('INSERT INTO departments (name) VALUES ($1)', [answer.departmentName], (err: Error, result: QueryResult) => {
+            const query = fs.readFileSync('db/add-department.sql', 'utf-8');
+            pool.query(query, [answer.departmentName], (err: Error, result: QueryResult) => {
                 if (err) {
                     console.log(err.message);
                 }
                 else {
-                    console.log(`${result.rowCount} row(s) added.`);
+                    console.log(`${result.rowCount} row added.`);
                     this.startCli();
                 }
             });
@@ -123,18 +162,14 @@ class Cli {
             }
         ];
         inquirer.prompt(questions).then(answer => {
-            pool.query(
-                `INSERT INTO roles (title, salary, department) 
-                    VALUES 
-                        ($1, $2, $3)`,
-                [answer.title, answer.salary, answer.department],
-                (err: Error, result: QueryResult) => {
+            const query = fs.readFileSync('db/add-role.sql', 'utf-8');
+            pool.query(query, [answer.title, answer.salary, answer.department], (err: Error, result: QueryResult) => {
                     if (err) {
                         console.log(err.message);
                         this.startCli();
                     }
                     else {
-                        console.log(`${result.rowCount} row(s) added.`);
+                        console.log(`${result.rowCount} row added.`);
                         this.startCli();
                     }
                 });
@@ -144,6 +179,7 @@ class Cli {
 
     private async addEmployee() {
         const roles = await this.getRoles();
+        const managers = await this.getManagers();
         const questions: any[] = [
             {
                 type: "input",
@@ -160,13 +196,17 @@ class Cli {
                 name: "role",
                 message: "Employee role:",
                 choices: roles
+            },
+            {
+                type: "list",
+                name: "manager",
+                message: "Manager:",
+                choices: managers
             }
         ];
         inquirer.prompt(questions).then(answers => {
-            pool.query(`INSERT INTO employees (first_name, last_name, role_id)
-                VALUES ($1, $2, $3)`,
-                [answers.first_name, answers.last_name, answers.role],
-                (err: Error, result: QueryResult) => {
+            const query = fs.readFileSync('db/add-employee.sql', 'utf-8');
+            pool.query(query, [answers.first_name, answers.last_name, answers.role, answers.manager], (err: Error, result: QueryResult) => {
                     if (err) {
                         console.log(err.message);
                         this.startCli();
@@ -197,7 +237,8 @@ class Cli {
             }
         ];
         inquirer.prompt(questions).then(answer => {
-            pool.query('UPDATE employees SET role_id = $1 WHERE id = $2', [answer.role, answer.employee], (err: Error, result: QueryResult) => {
+            const query = fs.readFileSync('db/update-employee.sql', 'utf-8');
+            pool.query(query, [answer.role, answer.employee], (err: Error, result: QueryResult) => {
                 if (err) {
                     console.log(err.message);
                     this.startCli();
@@ -261,6 +302,27 @@ class Cli {
                     });
                 });
                 resolve(employees);
+            });
+        });
+    }
+
+    private getManagers(): Promise<any[]> {
+        return new Promise((resolve, reject)=> {
+            let managers: any[] = [];
+            const query = fs.readFileSync('db/get-managers.sql', 'utf-8');
+            pool.query(query, (err: Error, result: QueryResult)=>{
+                if (err){
+                    return reject(err);
+                }
+                result.rows.forEach(employee => {
+                    if (employee.department == 1){
+                        managers.push({
+                            name: `${employee.first_name} ${employee.last_name}, ${employee.title}`,
+                            value: employee.id
+                        });
+                    }
+                });
+                return resolve(managers);
             });
         });
     }

@@ -1,0 +1,1 @@
+SELECT employees.id, employees.first_name, employees.last_name, roles.department, roles.title FROM employees JOIN roles ON employees.role_id=roles.id;
